@@ -3,9 +3,7 @@ using System.Windows.Forms;
 using System.IO;
 
 //using System.Collections.Generic;
-//using System.ComponentModel;
 //using System.Data;
-//using System.Drawing;
 //using System.Linq;
 //using System.Text;
 //using System.Threading.Tasks;
@@ -102,8 +100,8 @@ namespace NewFileNotfier
             var email = new Email();
 
 #if DEBUG
-            email.ToAddresses = "test@gmail.com";
-            email.FromAddress = "test@test.net";
+            email.ToAddresses = "";
+            email.FromAddress = "";
 
 #else
             email.ToAddresses = Settings.Default.ToAddresses;

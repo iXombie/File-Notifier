@@ -16,6 +16,7 @@ namespace NewFileNotfier
         private const int timeOut = 30;
         private const string REPLACE_PATH = "{FILEPATH}";
         private const string REPLACE_FILENAME = "{FILENAME}";
+        private const string APP_TITLE = "File Notifier";
         private FileWatcher _fileWatcher;
         private string _path;
         private string _mask;
@@ -32,35 +33,9 @@ namespace NewFileNotfier
             tbPath.Text = Settings.Default.Path;
         }
 
-        private bool validReadyState()
+        private bool fileWatcherRunning()
         {
-            var path = tbPath.Text;
-            if (String.IsNullOrWhiteSpace(path))
-            {
-                showErrorAlert("Enter a path");
-                return false;
-            }
-
-            if (!Directory.Exists(path))
-            {
-                showErrorAlert("Enter a valid path");
-                return false;
-            }
-            _path = path;
-
-            var mask = tbMask.Text;
-            _mask = mask;
-
-            Settings.Default.Path = _path;
-            Settings.Default.Mask = _mask;
-            Settings.Default.Save();
-
-            return true;
-        }
-
-        private void showErrorAlert(string message)
-        {
-            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            return (_fileWatcher != null && _fileWatcher.Running);
         }
 
         private void notifyMessage(string message)
@@ -69,30 +44,9 @@ namespace NewFileNotfier
             notifyIcon.ShowBalloonTip(timeOut);
         }
 
-        private void toggleUiState() 
+        private void notifyIconText(string text = "")
         {
-            if (fileWatcherRunning())
-            {
-                btnStartProcess.Text = "Stop";
-                tbMask.Enabled = false;
-                tbPath.Enabled = false;
-            }
-            else
-            {
-                btnStartProcess.Text = "Start";
-                tbMask.Enabled = true;
-                tbPath.Enabled = true;
-            }
-        }
-
-        private void fileWatcher_FileAdded(object sender, FileSystemEventArgs e)
-        {
-            var message = "New File " + e.Name + " has been added.";
-            notifyMessage(message);
-            if (Settings.Default.SendEmailNotification)
-            {
-                sendEmail(e.FullPath, e.Name);
-            }
+            notifyIcon.Text = (string.IsNullOrWhiteSpace(text) ? APP_TITLE : APP_TITLE + ": " + text);
         }
 
         private void sendEmail(string path, string filename)
@@ -123,13 +77,65 @@ namespace NewFileNotfier
             {
                 email.Attachement = path;
             }
-            
+
             email.Send();
         }
 
-        private bool fileWatcherRunning()
+        private void showErrorAlert(string message)
         {
-            return (_fileWatcher != null && _fileWatcher.Running);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+        }
+
+        private void toggleUiState()
+        {
+            if (fileWatcherRunning())
+            {
+                btnStartProcess.Text = "Stop";
+                tbMask.Enabled = false;
+                tbPath.Enabled = false;
+            }
+            else
+            {
+                btnStartProcess.Text = "Start";
+                tbMask.Enabled = true;
+                tbPath.Enabled = true;
+            }
+        }
+
+        private bool validReadyState()
+        {
+            var path = tbPath.Text;
+            if (String.IsNullOrWhiteSpace(path))
+            {
+                showErrorAlert("Enter a path");
+                return false;
+            }
+
+            if (!Directory.Exists(path))
+            {
+                showErrorAlert("Enter a valid path");
+                return false;
+            }
+            _path = path;
+
+            var mask = tbMask.Text;
+            _mask = mask;
+
+            Settings.Default.Path = _path;
+            Settings.Default.Mask = _mask;
+            Settings.Default.Save();
+
+            return true;
+        }
+
+        private void fileWatcher_FileAdded(object sender, FileSystemEventArgs e)
+        {
+            var message = "New File " + e.Name + " has been added.";
+            notifyMessage(message);
+            if (Settings.Default.SendEmailNotification)
+            {
+                sendEmail(e.FullPath, e.Name);
+            }
         }
 
         private void btnFolderSelect_Click(object sender, EventArgs e)
@@ -154,6 +160,7 @@ namespace NewFileNotfier
             {
                 _fileWatcher.Stop();
                 _fileWatcher = null;
+                notifyIconText();
                 
             }
             else if (validReadyState())
@@ -161,6 +168,8 @@ namespace NewFileNotfier
                 _fileWatcher = new FileWatcher(_path, _mask);
                 _fileWatcher.NewFileAddedEvent += fileWatcher_FileAdded;
                 _fileWatcher.Start();
+                notifyIconText ("Running " + _path);
+                notifyMessage("My watch begins.");
             }
             toggleUiState();
         }

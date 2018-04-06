@@ -8,10 +8,10 @@ namespace NewFileNotfier
         public frmSettings()
         {
             InitializeComponent();
-            LoadEmailSettings();
+            loadEmailSettings();
         }
 
-        private void SaveEmailSettings()
+        private void saveEmailSettings()
         {
             Settings.Default.SendEmailNotification = cbxEmailNotification.Checked;
             Settings.Default.ToAddresses = tbxTo.Text;
@@ -24,7 +24,7 @@ namespace NewFileNotfier
             Settings.Default.Save();
         }
 
-        private void LoadEmailSettings()
+        private void loadEmailSettings()
         {
             cbxEmailNotification.Checked = Settings.Default.SendEmailNotification;
             tbxTo.Text = Settings.Default.ToAddresses;
@@ -34,11 +34,23 @@ namespace NewFileNotfier
             tbxSubject.Text = Settings.Default.EmailSubject;
             tbxBody.Text = Settings.Default.EmailBody;
             cbxEmailFileWithNotification.Checked = Settings.Default.EmailSendFile;
+            enableEmailControls(Settings.Default.SendEmailNotification);
+        }
+
+        private void enableEmailControls(bool status)
+        {
+            tbxTo.Enabled = status;
+            tbxCC.Enabled = status;
+            tbxBCC.Enabled = status;
+            tbxFrom.Enabled = status;
+            tbxSubject.Enabled = status;
+            tbxBody.Enabled = status;
+            cbxEmailFileWithNotification.Enabled = status;
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            SaveEmailSettings();
+            saveEmailSettings();
             this.Close();
         }
 
@@ -49,14 +61,7 @@ namespace NewFileNotfier
 
         private void cbxEmailNotification_CheckedChanged(object sender, EventArgs e)
         {
-            var status = cbxEmailNotification.Checked;
-            tbxTo.Enabled = status;
-            tbxCC.Enabled = status;
-            tbxBCC.Enabled = status;
-            tbxFrom.Enabled = status;
-            tbxSubject.Enabled = status;
-            tbxBody.Enabled = status;
-            cbxEmailFileWithNotification.Enabled = status;
+            enableEmailControls(cbxEmailNotification.Checked);
         }
     }
 }
